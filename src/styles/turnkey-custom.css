@@ -1,0 +1,119 @@
+/* Turnkey Wallet Kit Custom Styles - Tailwind v3 Compatible */
+
+/* Modal Styles */
+.tk-modal {
+  @apply fixed inset-0 z-50 flex items-center justify-center;
+}
+
+.tk-modal-overlay {
+  @apply fixed inset-0 bg-black/50 backdrop-blur-sm;
+}
+
+.tk-modal-content {
+  @apply relative bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-md w-full mx-4 p-6;
+}
+
+.tk-modal-header {
+  @apply text-xl font-semibold mb-4 text-gray-900 dark:text-white;
+}
+
+.tk-modal-body {
+  @apply space-y-4;
+}
+
+/* Button Styles */
+.tk-button {
+  @apply px-4 py-2 rounded-md font-medium transition-colors duration-200;
+}
+
+.tk-button-primary {
+  @apply bg-[#5746AF] hover:bg-[#5746AF]/90 text-white;
+}
+
+.tk-button-secondary {
+  @apply bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white;
+}
+
+/* Input Styles */
+.tk-input {
+  @apply w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#5746AF] focus:border-transparent;
+}
+
+/* Auth Method Styles */
+.tk-auth-method {
+  @apply flex items-center gap-3 p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors;
+}
+
+.tk-auth-icon {
+  @apply w-6 h-6;
+}
+
+/* Wallet Info Styles */
+.tk-wallet-info {
+  @apply flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg;
+}
+
+.tk-address {
+  @apply font-mono text-sm text-gray-700 dark:text-gray-300;
+}
+
+/* Loading Spinner */
+.tk-spinner {
+  @apply animate-spin rounded-full border-2 border-gray-300 border-t-[#5746AF] w-5 h-5;
+}
+
+/* Error Message */
+.tk-error {
+  @apply text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-3 py-2 rounded-md;
+}
+
+/* Success Message */
+.tk-success {
+  @apply text-sm text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-3 py-2 rounded-md;
+}
+
+/* Scrollbar Styles */
+.tk-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(156 163 175) rgb(243 244 246);
+}
+
+.tk-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.tk-scrollbar::-webkit-scrollbar-track {
+  @apply bg-gray-100 dark:bg-gray-800;
+}
+
+.tk-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-gray-400 dark:bg-gray-600 rounded-full;
+}
+
+.tk-scrollbar::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-500 dark:bg-gray-500;
+}
+
+/* Animation */
+@keyframes tk-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.tk-fade-in {
+  animation: tk-fade-in 0.3s ease-out;
+}
+
+/* Mobile Responsive */
+@media (max-width: 640px) {
+  .tk-modal-content {
+    @apply max-w-full mx-0 rounded-none min-h-screen;
+  }
+}

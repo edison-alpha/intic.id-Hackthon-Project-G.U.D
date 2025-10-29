@@ -1,0 +1,40 @@
+{
+  "name": "hibeats-contracts",
+  "version": "1.0.0",
+  "description": "Smart contracts for HiBeats AI Music Platform",
+  "main": "index.js",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy": "hardhat run scripts/deploy.js",
+    "deploy:complete": "hardhat run scripts/deploy-complete.js",
+    "deploy:master": "hardhat run scripts/deploy-master.js",
+    "deploy:testnet": "hardhat run scripts/deploy-complete.js --network pushTestnet",
+    "deploy:mainnet": "hardhat run scripts/deploy-complete.js --network pushTestnet",
+    "deploy:master:testnet": "hardhat run scripts/deploy-master.js --network pushTestnet",
+    "deploy:master:mainnet": "hardhat run scripts/deploy-master.js --network pushTestnet",
+    "deploy:eventTicket": "hardhat run scripts/deploy-eventTicket.js",
+    "deploy:eventTicket:testnet": "hardhat run scripts/deploy-eventTicket.js --network pushTestnet",
+    "interact:eventTicket": "hardhat run scripts/interact-eventTicket.js",
+    "interact:eventTicket:testnet": "hardhat run scripts/interact-eventTicket.js --network pushTestnet",
+    "configure": "hardhat run scripts/configure.js",
+    "configure:testnet": "hardhat run scripts/configure.js --network pushTestnet",
+    "verify:testnet": "hardhat verify --network pushTestnet"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@openzeppelin/contracts": "^5.0.0",
+    "hardhat": "^2.19.0",
+    "dotenv": "^16.0.0"
+  },
+  "keywords": [
+    "blockchain",
+    "smart-contracts",
+    "nft",
+    "music",
+    "ai",
+    "somnia"
+  ],
+  "author": "HiBeats Team",
+  "license": "MIT"
+}

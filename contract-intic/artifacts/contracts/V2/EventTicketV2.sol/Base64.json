@@ -1,0 +1,10 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "Base64",
+  "sourceName": "contracts/V2/EventTicketV2.sol",
+  "abi": [],
+  "bytecode": "0x60808060405234601757603a9081601d823930815050f35b600080fdfe600080fdfea2646970667358221220ae98aee733c27d6bbdb6a7d42152f6bcaec1f3c00488c5836845ef32acc7b01064736f6c63430008160033",
+  "deployedBytecode": "0x600080fdfea2646970667358221220ae98aee733c27d6bbdb6a7d42152f6bcaec1f3c00488c5836845ef32acc7b01064736f6c63430008160033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

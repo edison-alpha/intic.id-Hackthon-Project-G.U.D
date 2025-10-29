@@ -1,0 +1,305 @@
+/* Turnkey Modal Custom Styles - Compatible with Tailwind v3 */
+/* This replaces @turnkey/react-wallet-kit/styles.css to avoid Tailwind v4 conflicts */
+
+/* Turnkey style detection sentinel */
+.tk-style-sentinel {
+  position: absolute !important;
+  width: 1234px !important;
+  height: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Modal overlay */
+.tk-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Modal container */
+.tk-modal {
+  position: relative;
+  background: white;
+  border-radius: 12px;
+  padding: 32px;
+  max-width: 440px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.5;
+}
+
+.tk-modal * {
+  box-sizing: border-box;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .tk-modal {
+    background: #1a1a1a;
+    color: white;
+  }
+  
+  .tk-modal input,
+  .tk-modal button {
+    background: #2a2a2a;
+    color: white;
+    border-color: #3a3a3a;
+  }
+}
+
+/* Modal header */
+.tk-modal h2,
+.tk-modal h3 {
+  margin: 0 0 16px 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: inherit;
+}
+
+/* Modal text */
+.tk-modal p {
+  margin: 0 0 16px 0;
+  font-size: 14px;
+  color: inherit;
+  opacity: 0.8;
+}
+
+/* Input fields */
+.tk-modal input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 12px;
+  transition: border-color 0.15s ease;
+  background: white;
+}
+
+.tk-modal input:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.tk-modal input::placeholder {
+  color: #9ca3af;
+}
+
+/* Buttons */
+.tk-modal button {
+  width: 100%;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-bottom: 8px;
+  background: #6366f1;
+  color: white;
+}
+
+.tk-modal button:hover {
+  background: #4f46e5;
+  transform: translateY(-1px);
+}
+
+.tk-modal button:active {
+  transform: translateY(0);
+}
+
+.tk-modal button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Secondary button */
+.tk-modal button.secondary {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.tk-modal button.secondary:hover {
+  background: #e5e7eb;
+}
+
+/* Close button */
+.tk-modal .close-button {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: transparent;
+  color: #6b7280;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+}
+
+.tk-modal .close-button:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+/* Loading spinner */
+.tk-modal .spinner {
+  border: 2px solid #f3f4f6;
+  border-top-color: #6366f1;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 0.6s linear infinite;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Error message */
+.tk-modal .error {
+  background: #fef2f2;
+  color: #dc2626;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  border: 1px solid #fecaca;
+}
+
+/* Success message */
+.tk-modal .success {
+  background: #f0fdf4;
+  color: #16a34a;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  border: 1px solid #bbf7d0;
+}
+
+/* Divider */
+.tk-modal .divider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 24px 0;
+}
+
+/* Authentication methods */
+.tk-modal .auth-methods {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tk-modal .auth-method {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  background: white;
+}
+
+.tk-modal .auth-method:hover {
+  border-color: #6366f1;
+  background: #f9fafb;
+}
+
+.tk-modal .auth-method-icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.tk-modal .auth-method-content {
+  flex: 1;
+  text-align: left;
+}
+
+.tk-modal .auth-method-title {
+  font-weight: 500;
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+
+.tk-modal .auth-method-description {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Wallet list */
+.tk-modal .wallet-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.tk-modal .wallet-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+}
+
+.tk-modal .wallet-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tk-modal .wallet-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tk-modal .wallet-address {
+  font-family: monospace;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .tk-modal {
+    padding: 24px;
+    max-width: 100%;
+    width: 95%;
+    border-radius: 16px;
+  }
+  
+  .tk-modal h2,
+  .tk-modal h3 {
+    font-size: 20px;
+  }
+}
