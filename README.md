@@ -58,9 +58,6 @@ QR code-based check-ins with blockchain verification ensure real-time attendance
 ### **Community Governance**
 Token holders participate in platform decisions through decentralized governance, ensuring the platform evolves according to community needs.
 
-### **Multi-Currency Support**
-Accept payments in PUSH, TIC, ETH, SOL, and more, with dynamic USD pricing that adapts to market conditions.
-
 ### **Universal Chain & Wallet Integration**
 Leveraging PushChain's groundbreaking **Universal Chain Architecture** and account abstraction technology, users can:
 - Create wallets instantly without seed phrases or complex setup
@@ -96,11 +93,6 @@ Create events without writing any code. Our platform automatically deploys optim
 #### **Multi-Venue Discovery**
 Integrated OpenStreetMap search helps organizers find and select venues with geographic verification and location data.
 
-#### **Flexible Pricing Models**
-- Fixed price ticketing
-- Dynamic USD pricing (adjusts automatically with crypto market fluctuations)
-- Multiple currency acceptance (PUSH, TIC, ETH, SOL)
-- Early bird and tier-based pricing support
 
 #### **Comprehensive Analytics Dashboard**
 Real-time insights into:
