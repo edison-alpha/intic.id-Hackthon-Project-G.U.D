@@ -681,15 +681,7 @@ Intic.id is more than a ticketing platform—it's a movement to democratize the 
 
 ---
 
-## Version History
 
-- **V3.1** (January 2025) - Fraud protection system with 72-hour lock and community reporting
-- **V3.0** (December 2024) - Multi-currency support and dynamic pricing
-- **V2.1** (November 2024) - Marketplace V2 with escrow and royalties
-- **V2.0** (October 2024) - NFT marketplace launch
-- **V1.0** (September 2024) - Core platform launch on PushChain Testnet
-
----
 
 ## Acknowledgments
 
