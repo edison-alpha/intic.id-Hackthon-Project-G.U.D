@@ -20,7 +20,7 @@ Intic.id is a decentralized event ticketing platform with NFT tickets, marketpla
 **Tech Stack:**
 - Solidity 0.8.19
 - OpenZeppelin 5.0.0
-- PushChain Testnet (Chain ID: 50311)
+- PushChain Testnet (Chain ID: 42101)
 - Standards: ERC-721, ERC-721Enumerable, EIP-2981
 
 ---
@@ -330,26 +330,6 @@ await ticketContract.refundTicket(tokenId);
 
 ---
 
-## Gas Optimization
-
-**Techniques Used:**
-- Custom errors instead of require strings
-- Unchecked math in loops
-- Batch operations for multiple tickets
-- Minimal storage reads
-- Event indexing for off-chain queries
-
-**Estimated Gas Costs:**
-| Operation | Gas Cost |
-|-----------|----------|
-| Register Organizer | ~120k |
-| Mint Single Ticket | ~180k |
-| Batch Mint (10) | ~900k |
-| List NFT | ~80k |
-| Buy NFT | ~120k |
-| Refund | ~90k |
-
----
 
 ## Testing
 
@@ -406,5 +386,6 @@ MIT License - see LICENSE file
 - Discord: [discord.gg/intic](https://discord.gg/intic)
 
 ---
+
 
 
