@@ -264,7 +264,7 @@ module.exports = {
   networks: {
     pushchain: {
       url: "https://api.testnet.pushchain.com/rpc",
-      chainId: 50311,
+      chainId: 42101,
       accounts: [process.env.PRIVATE_KEY]
     }
   }
@@ -381,11 +381,12 @@ MIT License - see LICENSE file
 
 ## Support
 
-- Documentation: [docs.intic.id](https://intic.id)
-- GitHub: [github.com/intic-id](https://github.com/intic-id)
+- Website: [intic.id](https://intic-official.vercel.app/)
+- GitHub: [github.com/intic-id]([https://github.com/intic-id](https://github.com/edison-alpha))
 - Discord: [discord.gg/intic](https://discord.gg/intic)
 
 ---
+
 
 
 
