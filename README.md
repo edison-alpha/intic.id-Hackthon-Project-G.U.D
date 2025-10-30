@@ -1,5 +1,8 @@
 # Intic.id - Blockchain-Powered Event Ticketing Platform
 
+<img width="1527" height="1206" alt="inticc" src="https://github.com/user-attachments/assets/00f3be68-ab60-4e49-ada8-4f08f265e362" />
+
+
 ## What is Intic.id?
 
 Intic.id is an innovative blockchain-based event ticketing platform built on the **PushChain Universal Network**. Our mission is to revolutionize the event industry by providing transparent, secure, and fraud-proof ticketing through NFT technology while empowering both event organizers and attendees with decentralized finance features and community governance.
