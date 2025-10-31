@@ -25,8 +25,8 @@ export interface IPFSGatewayResult {
  */
 const IPFS_GATEWAYS = [
   // Cloudflare subdomain gateway (recommended - no CORS issues)
-  { type: 'subdomain', url: 'https://cf-ipfs.com' },
-  // Path-style gateways (may have CORS issues)
+  { type: 'subdomain', url: 'cf-ipfs.com' },
+  // Path-style gateways (may have CORS issues) - use only as last resort
   { type: 'path', url: 'https://ipfs.io/ipfs/' },
   { type: 'path', url: 'https://gateway.pinata.cloud/ipfs/' },
   { type: 'path', url: 'https://dweb.link/ipfs/' },
@@ -66,11 +66,14 @@ export const convertIPFSToGateway = (ipfsUri: string, gatewayIndex: number = 0):
   }
 
   const gateway = IPFS_GATEWAYS[gatewayIndex];
-  if (!gateway) return `${IPFS_GATEWAYS[0].url}/ipfs/${cid}`;
+  if (!gateway) {
+    const fallbackGateway = IPFS_GATEWAYS[0];
+    return fallbackGateway ? `https://${fallbackGateway.url}/ipfs/${cid}` : `https://ipfs.io/ipfs/${cid}`;
+  }
 
   // Use subdomain format for Cloudflare (CORS-safe)
   if (gateway.type === 'subdomain') {
-    return `https://${cid}.ipfs.${gateway.url.replace('https://', '')}`;
+    return `https://${cid}.ipfs.${gateway.url}`;
   }
 
   // Use path format for other gateways
@@ -95,8 +98,62 @@ export const fetchFromIPFS = async (
     return { success: false, error: 'Empty IPFS URI' };
   }
 
-  // Try each gateway in order
-  for (let gatewayIndex = 0; gatewayIndex < IPFS_GATEWAYS.length; gatewayIndex++) {
+  // Try Cloudflare subdomain gateway first (CORS-safe)
+  const cloudflareGateway = IPFS_GATEWAYS[0];
+  if (cloudflareGateway && cloudflareGateway.type === 'subdomain') {
+    const cloudflareUrl = convertIPFSToGateway(ipfsUri, 0);
+
+    for (let attempt = 0; attempt < retries; attempt++) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+        console.log(`🔍 Trying Cloudflare gateway: ${cloudflareUrl}`);
+        const response = await fetch(cloudflareUrl, {
+          signal: controller.signal,
+          headers: {
+            'Accept': 'application/json, image/*, */*',
+            // No custom headers to avoid CORS issues
+            ...headers
+          },
+        });
+
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+          console.log(`✅ Cloudflare gateway succeeded`);
+          try {
+            const contentType = response.headers.get('content-type') || '';
+            if (contentType.includes('application/json')) {
+              const data = await response.json();
+              return { success: true, data, gateway: cloudflareGateway.url };
+            } else {
+              const data = await response.blob();
+              return { success: true, data, gateway: cloudflareGateway.url };
+            }
+          } catch (parseError) {
+            const data = await response.text();
+            return { success: true, data, gateway: cloudflareGateway.url };
+          }
+        } else if (response.status === 429) {
+          console.warn(`⚠️ Cloudflare gateway rate limited (429)`);
+          break;
+        } else {
+          console.warn(`⚠️ Cloudflare gateway returned ${response.status}`);
+          break;
+        }
+      } catch (error: any) {
+        console.warn(`⚠️ Cloudflare gateway failed:`, error.message);
+        if (attempt < retries - 1) {
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
+        }
+      }
+    }
+  }
+
+  // Fallback to other gateways if Cloudflare fails
+  console.log(`🔄 Cloudflare failed, trying fallback gateways...`);
+  for (let gatewayIndex = 1; gatewayIndex < IPFS_GATEWAYS.length; gatewayIndex++) {
     const gateway = IPFS_GATEWAYS[gatewayIndex];
     if (!gateway) continue;
 
@@ -107,7 +164,6 @@ export const fetchFromIPFS = async (
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-        // Remove Cache-Control header to avoid CORS issues
         const response = await fetch(gatewayUrl, {
           signal: controller.signal,
           headers: {
@@ -200,6 +256,7 @@ export const fetchIPFSMetadata = async (
 /**
  * Get IPFS image URL with fallback gateway
  * Returns the first working gateway URL for images
+ * Prioritizes Cloudflare subdomain gateway for CORS safety
  */
 export const getIPFSImageUrl = async (
   ipfsUri: string,
@@ -207,16 +264,47 @@ export const getIPFSImageUrl = async (
 ): Promise<string | null> => {
   if (!ipfsUri) return null;
 
-  // Try each gateway and return the first one that responds
-  for (let gatewayIndex = 0; gatewayIndex < IPFS_GATEWAYS.length; gatewayIndex++) {
+  // Try Cloudflare subdomain gateway first (CORS-safe)
+  const cloudflareGateway = IPFS_GATEWAYS[0];
+  if (cloudflareGateway && cloudflareGateway.type === 'subdomain') {
+    const cloudflareUrl = convertIPFSToGateway(ipfsUri, 0);
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000); // Quick check for Cloudflare
+
+      console.log(`🔍 Checking Cloudflare gateway for image: ${cloudflareUrl}`);
+      const response = await fetch(cloudflareUrl, {
+        method: 'HEAD',
+        signal: controller.signal,
+        headers: {
+          'Accept': 'image/*',
+          // No custom headers to avoid CORS issues
+        },
+      });
+
+      clearTimeout(timeoutId);
+
+      if (response.ok) {
+        console.log(`✅ Cloudflare gateway has image`);
+        return cloudflareUrl;
+      }
+    } catch (error) {
+      console.warn(`⚠️ Cloudflare gateway check failed:`, error);
+    }
+  }
+
+  // Fallback to other gateways
+  console.log(`🔄 Cloudflare not available, checking fallback gateways...`);
+  for (let gatewayIndex = 1; gatewayIndex < IPFS_GATEWAYS.length; gatewayIndex++) {
     const gatewayUrl = convertIPFSToGateway(ipfsUri, gatewayIndex);
 
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // Shorter timeout for images
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
 
       const response = await fetch(gatewayUrl, {
-        method: 'HEAD', // HEAD request to check if image exists
+        method: 'HEAD',
         signal: controller.signal,
         headers: {
           'Accept': 'image/*',
@@ -236,7 +324,8 @@ export const getIPFSImageUrl = async (
     }
   }
 
-  // If all gateways fail, return the first one as fallback
+  // If all gateways fail, return Cloudflare as fallback (most reliable)
+  console.log(`⚠️ All gateways failed, using Cloudflare as fallback`);
   return convertIPFSToGateway(ipfsUri, 0);
 };
 
