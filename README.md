@@ -159,7 +159,7 @@ Seamless event entry with:
 #### **Email Reminders & Calendar Integration**
 Never miss an event with:
 - Automated email reminders
-- Calendar event creation (.ics format)
+- Calendar event creation
 - Pre-event notifications
 - Last-minute updates
 
