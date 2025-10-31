@@ -31,4 +31,7 @@ dist-ssr
 # Problematic files
 nul
 
+# Documentation files (excluded by user request)
+*.md
+
 

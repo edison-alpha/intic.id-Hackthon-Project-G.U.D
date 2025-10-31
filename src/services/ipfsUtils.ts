@@ -20,20 +20,24 @@ export interface IPFSGatewayResult {
 
 /**
  * Multiple IPFS gateways for fallback support
- * Ordered by reliability and speed
+ * Ordered by reliability and CORS compatibility
+ * Priority: Cloudflare subdomain (no CORS issues) > Path-style gateways
  */
 const IPFS_GATEWAYS = [
-  'https://ipfs.io/ipfs/',
-  'https://cloudflare-ipfs.com/ipfs/',
-  'https://gateway.pinata.cloud/ipfs/',
-  'https://dweb.link/ipfs/',
-  'https://ipfs.infura.io/ipfs/',
-  'https://gateway.ipfs.io/ipfs/',
+  // Cloudflare subdomain gateway (recommended - no CORS issues)
+  { type: 'subdomain', url: 'https://cf-ipfs.com' },
+  // Path-style gateways (may have CORS issues)
+  { type: 'path', url: 'https://ipfs.io/ipfs/' },
+  { type: 'path', url: 'https://gateway.pinata.cloud/ipfs/' },
+  { type: 'path', url: 'https://dweb.link/ipfs/' },
+  { type: 'path', url: 'https://ipfs.infura.io/ipfs/' },
+  { type: 'path', url: 'https://gateway.ipfs.io/ipfs/' },
 ];
 
 /**
  * Convert IPFS URI to HTTP gateway URL
  * Supports ipfs://, gateway URLs, and bare CIDs
+ * Uses subdomain format for Cloudflare gateway (CORS-safe)
  */
 export const convertIPFSToGateway = (ipfsUri: string, gatewayIndex: number = 0): string => {
   if (!ipfsUri) return '';
@@ -45,7 +49,7 @@ export const convertIPFSToGateway = (ipfsUri: string, gatewayIndex: number = 0):
   } else if (ipfsUri.includes('/ipfs/')) {
     // Extract CID from gateway URL
     const match = ipfsUri.match(/\/ipfs\/([a-zA-Z0-9]+)/);
-    if (match) {
+    if (match && match[1]) {
       cid = match[1];
     }
   } else if (ipfsUri.match(/^(Qm[a-zA-Z0-9]{44}|baf[a-zA-Z0-9]+)$/)) {
@@ -61,8 +65,16 @@ export const convertIPFSToGateway = (ipfsUri: string, gatewayIndex: number = 0):
     return ipfsUri;
   }
 
-  const gateway = IPFS_GATEWAYS[gatewayIndex] || IPFS_GATEWAYS[0];
-  return `${gateway}${cid}`;
+  const gateway = IPFS_GATEWAYS[gatewayIndex];
+  if (!gateway) return `${IPFS_GATEWAYS[0].url}/ipfs/${cid}`;
+
+  // Use subdomain format for Cloudflare (CORS-safe)
+  if (gateway.type === 'subdomain') {
+    return `https://${cid}.ipfs.${gateway.url.replace('https://', '')}`;
+  }
+
+  // Use path format for other gateways
+  return `${gateway.url}${cid}`;
 };
 
 /**
@@ -85,6 +97,9 @@ export const fetchFromIPFS = async (
 
   // Try each gateway in order
   for (let gatewayIndex = 0; gatewayIndex < IPFS_GATEWAYS.length; gatewayIndex++) {
+    const gateway = IPFS_GATEWAYS[gatewayIndex];
+    if (!gateway) continue;
+
     const gatewayUrl = convertIPFSToGateway(ipfsUri, gatewayIndex);
 
     for (let attempt = 0; attempt < retries; attempt++) {
@@ -92,11 +107,12 @@ export const fetchFromIPFS = async (
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), timeout);
 
+        // Remove Cache-Control header to avoid CORS issues
         const response = await fetch(gatewayUrl, {
           signal: controller.signal,
           headers: {
             'Accept': 'application/json, image/*, */*',
-            'Cache-Control': 'no-cache',
+            // Removed 'Cache-Control': 'no-cache' to avoid CORS issues
             ...headers
           },
         });
@@ -109,20 +125,20 @@ export const fetchFromIPFS = async (
             const contentType = response.headers.get('content-type') || '';
             if (contentType.includes('application/json')) {
               const data = await response.json();
-              return { success: true, data, gateway: IPFS_GATEWAYS[gatewayIndex] };
+              return { success: true, data, gateway: gateway.url };
             } else {
               // For images or other binary data, return the response
               const data = await response.blob();
-              return { success: true, data, gateway: IPFS_GATEWAYS[gatewayIndex] };
+              return { success: true, data, gateway: gateway.url };
             }
           } catch (parseError) {
             // If JSON parsing fails, return the response text
             const data = await response.text();
-            return { success: true, data, gateway: IPFS_GATEWAYS[gatewayIndex] };
+            return { success: true, data, gateway: gateway.url };
           }
         } else if (response.status === 429) {
           // Rate limited - try next gateway immediately
-          console.warn(`⚠️ Gateway ${IPFS_GATEWAYS[gatewayIndex]} rate limited (429)`);
+          console.warn(`⚠️ Gateway ${gateway.url} rate limited (429)`);
           break;
         } else if (response.status >= 500) {
           // Server error - retry with same gateway
@@ -137,9 +153,9 @@ export const fetchFromIPFS = async (
         }
       } catch (error: any) {
         if (error.name === 'AbortError') {
-          console.warn(`⚠️ Gateway ${IPFS_GATEWAYS[gatewayIndex]} timeout after ${timeout}ms`);
+          console.warn(`⚠️ Gateway ${gateway.url} timeout after ${timeout}ms`);
         } else {
-          console.warn(`⚠️ Gateway ${IPFS_GATEWAYS[gatewayIndex]} failed:`, error.message);
+          console.warn(`⚠️ Gateway ${gateway.url} failed:`, error.message);
         }
 
         // Wait before retry
@@ -204,6 +220,7 @@ export const getIPFSImageUrl = async (
         signal: controller.signal,
         headers: {
           'Accept': 'image/*',
+          // Removed Cache-Control header to avoid CORS issues
           ...options.headers
         },
       });
@@ -229,7 +246,7 @@ export const getIPFSImageUrl = async (
 export const getIPFSGatewayUrls = (ipfsUri: string): string[] => {
   if (!ipfsUri) return [];
 
-  return IPFS_GATEWAYS.map((gateway, index) => convertIPFSToGateway(ipfsUri, index));
+  return IPFS_GATEWAYS.map((_, index) => convertIPFSToGateway(ipfsUri, index));
 };
 
 /**
@@ -254,7 +271,7 @@ export const extractIPFSCid = (ipfsUri: string): string | null => {
 
   if (ipfsUri.includes('/ipfs/')) {
     const match = ipfsUri.match(/\/ipfs\/([a-zA-Z0-9]+)/);
-    return match ? match[1] : null;
+    return match && match[1] ? match[1] : null;
   }
 
   if (isValidIPFSCid(ipfsUri)) {
