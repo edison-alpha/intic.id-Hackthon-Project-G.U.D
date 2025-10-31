@@ -10,6 +10,9 @@ const PINATA_API_SECRET = import.meta.env.VITE_PINATA_API_SECRET;
 const PINATA_JWT = import.meta.env.VITE_PINATA_JWT;
 const PINATA_GATEWAY = 'https://gateway.pinata.cloud/ipfs';
 
+// Import IPFS utilities for fallback support
+import { convertIPFSToGateway } from './ipfsUtils';
+
 // Debug: Log if JWT is loaded (only in development)
 if (import.meta.env.DEV) {
 
@@ -258,10 +261,14 @@ export const generateTicketMetadata = (
 };
 
 /**
- * Get IPFS URL from CID
+ * Get IPFS URL from CID with fallback gateway support
+ * Now uses multiple gateways to avoid CORS and rate limiting issues
  */
 export const getIpfsUrl = (cid: string): string => {
-  return `${PINATA_GATEWAY}/${cid}`;
+  if (!cid) return '';
+
+  // Use the centralized IPFS utility for better gateway handling
+  return convertIPFSToGateway(cid, 0); // Use first gateway (ipfs.io) as primary
 };
 
 /**

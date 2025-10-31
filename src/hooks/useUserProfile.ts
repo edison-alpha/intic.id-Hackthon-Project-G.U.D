@@ -9,6 +9,7 @@ import { BrowserProvider, Contract } from 'ethers';
 import UserProfileABI from '@/contracts/UserProfile.json';
 import { getContracts } from '@/config/contracts';
 import { isOrganizerRegistered, getOrganizerProfile } from '@/services/eventOrganizerContract';
+import { fetchIPFSMetadata } from '@/services/ipfsUtils';
 
 interface UserProfileData {
   // On-chain data
@@ -42,57 +43,7 @@ export function useUserProfile(address: string | undefined) {
 
   const fetchMetadataFromIPFS = async (profileUri: string) => {
     try {
-      let ipfsHash = profileUri;
-      
-      if (profileUri.startsWith('ipfs://')) {
-        ipfsHash = profileUri.replace('ipfs://', '');
-      } else if (profileUri.startsWith('https://gateway.pinata.cloud/ipfs/')) {
-        ipfsHash = profileUri.replace('https://gateway.pinata.cloud/ipfs/', '');
-      } else if (profileUri.startsWith('http')) {
-        // Already a full URL, use as is
-        ipfsHash = profileUri;
-      } else if (!profileUri.match(/^(Qm[a-zA-Z0-9]{44}|baf[a-zA-Z0-9]+)$/)) {
-        console.warn('⚠️ Invalid profileUri format:', profileUri);
-        return null;
-      }
-      
-      // Multiple gateway fallbacks
-      const gateways = ipfsHash.startsWith('http') ? [ipfsHash] : [
-        `https://gateway.pinata.cloud/ipfs/${ipfsHash}`,
-        `https://ipfs.io/ipfs/${ipfsHash}`,
-        `https://cloudflare-ipfs.com/ipfs/${ipfsHash}`,
-      ];
-
-      for (const gateway of gateways) {
-        try {
-
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
-
-          const response = await fetch(gateway, {
-            signal: controller.signal,
-            headers: {
-              'Accept': 'application/json',
-            },
-          });
-          
-          clearTimeout(timeoutId);
-          
-          if (response.ok) {
-            const metadata = await response.json();
-
-            return metadata;
-          } else {
-            console.warn(`⚠️ Gateway ${gateway} returned status:`, response.status);
-          }
-        } catch (err: any) {
-          console.warn(`⚠️ Gateway ${gateway} failed:`, err.message);
-          continue;
-        }
-      }
-      
-      console.error('❌ All IPFS gateways failed');
-      return null;
+      return await fetchIPFSMetadata(profileUri);
     } catch (err) {
       console.error('❌ Failed to fetch IPFS metadata:', err);
       return null;

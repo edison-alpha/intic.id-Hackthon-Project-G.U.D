@@ -4,6 +4,8 @@
  * Simplified version for PushChain blockchain integration
  */
 
+import { fetchIPFSMetadata as fetchIPFS } from './ipfsUtils';
+
 export interface NFTMetadata {
   name?: string;
   description?: string;
@@ -92,20 +94,7 @@ export interface NFTHolder {
  */
 export const fetchIPFSMetadata = async (ipfsUri: string): Promise<NFTMetadata | null> => {
   try {
-    let httpUrl = ipfsUri;
-    if (ipfsUri.startsWith('ipfs://')) {
-      const hash = ipfsUri.replace('ipfs://', '');
-      httpUrl = `https://gateway.pinata.cloud/ipfs/${hash}`;
-    }
-
-    const response = await fetch(httpUrl);
-    if (!response.ok) {
-      return null;
-    }
-
-    const metadata = await response.json();
-    return metadata as NFTMetadata;
-
+    return await fetchIPFS(ipfsUri);
   } catch (error) {
     console.error('[NFTIndexer] Error fetching IPFS metadata:', error);
     return null;

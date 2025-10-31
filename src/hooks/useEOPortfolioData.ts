@@ -10,6 +10,7 @@ import EventOrganizerABI from '@/contracts/EventOrganizer.json';
 import EventTicketABI from '@/contracts/EventTicket.json';
 import { getContracts } from '@/config/contracts';
 import { fetchCompleteEventDetails } from '@/services/eventBrowseContract';
+import { convertIPFSToGateway } from '@/services/ipfsUtils';
 
 // Types
 export interface EventPerformance {
@@ -284,11 +285,8 @@ export function useEOPortfolioData() {
 
       // Get image from metadata or use placeholder
       let image = `https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&q=80`;
-      if (eventImageUri && eventImageUri.startsWith('ipfs://')) {
-        const ipfsHash = eventImageUri.replace('ipfs://', '');
-        image = `https://ipfs.io/ipfs/${ipfsHash}`;
-      } else if (eventImageUri && eventImageUri.startsWith('http')) {
-        image = eventImageUri;
+      if (eventImageUri) {
+        image = convertIPFSToGateway(eventImageUri, 0); // Use first gateway (ipfs.io)
       }
 
       const eventData = {

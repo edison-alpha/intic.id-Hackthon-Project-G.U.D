@@ -1,6 +1,7 @@
 import { ethers } from 'ethers';
 import { CONTRACTS, getNetworkConfig } from '@/config/contracts';
 import EventOrganizerArtifact from '@/contracts/EventOrganizer.json';
+import { fetchIPFSMetadata } from './ipfsUtils';
 
 // EventOrganizer ABI - key functions only (for ethers.js string-based usage)
 const EVENT_ORGANIZER_ABI = [
@@ -393,47 +394,7 @@ export const getOrganizerProfile = async (address: string) => {
     let metadata = null;
     if (profileUri && profileUri.length > 0) {
       try {
-        let ipfsHash = profileUri;
-        if (profileUri.startsWith('ipfs://')) {
-          ipfsHash = profileUri.replace('ipfs://', '');
-        } else if (profileUri.startsWith('https://gateway.pinata.cloud/ipfs/')) {
-          ipfsHash = profileUri.replace('https://gateway.pinata.cloud/ipfs/', '');
-        }
-
-        // Multiple gateway fallbacks
-        const gateways = [
-          `https://gateway.pinata.cloud/ipfs/${ipfsHash}`,
-          `https://ipfs.io/ipfs/${ipfsHash}`,
-          `https://cloudflare-ipfs.com/ipfs/${ipfsHash}`,
-        ];
-
-        for (const gateway of gateways) {
-          try {
-
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
-
-            const response = await fetch(gateway, {
-              signal: controller.signal,
-              headers: {
-                'Accept': 'application/json',
-              },
-            });
-            
-            clearTimeout(timeoutId);
-
-            if (response.ok) {
-              metadata = await response.json();
-
-              break;
-            } else {
-              console.warn(`⚠️ Gateway ${gateway} returned status:`, response.status);
-            }
-          } catch (err: any) {
-            console.warn(`⚠️ Gateway ${gateway} failed:`, err.message);
-            continue;
-          }
-        }
+        metadata = await fetchIPFSMetadata(profileUri);
 
         if (!metadata) {
           console.error('❌ All IPFS gateways failed to fetch metadata');
@@ -470,32 +431,12 @@ export const getMetadataFromProfileUri = async (profileUri: string) => {
       throw new Error('Invalid profileUri: URI is empty');
     }
 
-    let gatewayUrl: string;
-    
-    // Handle different URI formats
-    if (profileUri.startsWith('ipfs://')) {
-      // Format: ipfs://QmXxx... or ipfs://bafxxx...
-      const ipfsHash = profileUri.replace('ipfs://', '');
-      gatewayUrl = `https://gateway.pinata.cloud/ipfs/${ipfsHash}`;
-    } else if (profileUri.startsWith('https://gateway.pinata.cloud/ipfs/') || 
-               profileUri.startsWith('https://ipfs.io/ipfs/') ||
-               profileUri.startsWith('http')) {
-      // Already a gateway URL
-      gatewayUrl = profileUri;
-    } else if (profileUri.match(/^(Qm[a-zA-Z0-9]{44}|baf[a-zA-Z0-9]+)$/)) {
-      // Just a CID without prefix
-      gatewayUrl = `https://gateway.pinata.cloud/ipfs/${profileUri}`;
-    } else {
-      throw new Error(`Invalid profileUri format: ${profileUri}`);
-    }
+    // Import the centralized IPFS utility
+    const metadata = await fetchIPFSMetadata(profileUri);
 
-    const response = await fetch(gatewayUrl);
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch metadata: ${response.status} ${response.statusText}`);
+    if (!metadata) {
+      throw new Error('Failed to fetch metadata from any IPFS gateway');
     }
-    
-    const metadata = await response.json();
 
     return metadata;
   } catch (error) {

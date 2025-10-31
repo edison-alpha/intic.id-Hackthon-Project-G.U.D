@@ -5,6 +5,7 @@ import { Calendar, MapPin, Users, ArrowLeft, BadgeCheck, ExternalLink, Star, Awa
 import STXIcon from '@/components/STXIcon';
 import { getOrganizerProfile, getUpcomingEventsByOrganizer, getPastEventsByOrganizer, getMetadataFromProfileUri, getCompleteOrganizerData } from '@/services/eventOrganizerContract';
 import { fetchCompleteEventDetails } from '@/services/eventBrowseContract';
+import { convertIPFSToGateway } from '@/services/ipfsUtils';
 import { toast } from 'sonner';
 
 const EOProfile = () => {
@@ -260,15 +261,9 @@ const EOProfile = () => {
       const getGatewayUrl = (url: string | undefined | null): string | null => {
         if (!url) return null;
         if (url.startsWith('http')) return url;
-        if (url.startsWith('ipfs://')) {
-          // Convert ipfs:// to gateway URL
-          return `https://gateway.pinata.cloud/ipfs/${url.replace('ipfs://', '')}`;
-        }
-        // If it's just a CID without the prefix, treat it as ipfs
-        if (url.match(/^Qm[a-zA-Z0-9]{44}$/)) {
-          return `https://gateway.pinata.cloud/ipfs/${url}`;
-        }
-        return null;
+
+        // Use the centralized IPFS utility
+        return convertIPFSToGateway(url, 0); // Use first gateway (ipfs.io)
       };
 
       // Fetch and parse IPFS metadata from profileUri
