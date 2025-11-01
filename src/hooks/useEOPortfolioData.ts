@@ -8,7 +8,7 @@ import { ethers } from 'ethers';
 import { useWallet } from '@/hooks/usePushChainWallet';
 import EventOrganizerABI from '@/contracts/EventOrganizer.json';
 import EventTicketABI from '@/contracts/EventTicket.json';
-import { getContracts } from '@/config/contracts';
+import { getContracts, getNetworkConfig } from '@/config/contracts';
 import { fetchCompleteEventDetails } from '@/services/eventBrowseContract';
 import { convertIPFSToGateway } from '@/services/ipfsUtils';
 
@@ -658,8 +658,27 @@ export function useEOPortfolioData() {
 
       console.log('🚀 Fetching EO Portfolio data for:', address);
 
-      const provider = new ethers.BrowserProvider(window.ethereum);
+      // Use JsonRpcProvider like the service does for consistency
+      const networkConfig = getNetworkConfig();
+      const provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl);
       const contracts = getContracts();
+
+      // Check network (JsonRpcProvider doesn't need this check since it uses configured RPC)
+      console.log('🌐 Using configured network:', networkConfig.name, 'Chain ID:', networkConfig.chainId);
+
+      // Check if contract exists at the expected address
+      console.log('🔍 Checking contract deployment at:', contracts.EventOrganizer);
+      try {
+        const code = await provider.getCode(contracts.EventOrganizer);
+        if (code === '0x') {
+          throw new Error('EventOrganizer contract not deployed at the expected address');
+        }
+        console.log('✅ Contract found at address');
+      } catch (contractError: any) {
+        console.error('❌ Contract check failed:', contractError);
+        setError('EventOrganizer contract not found. Please check contract deployment.');
+        return;
+      }
 
       // Get organizer info
       const organizerContract = new ethers.Contract(
@@ -672,9 +691,62 @@ export function useEOPortfolioData() {
       const resolvedAddress = await resolveUEAAddress(address, organizerContract);
       console.log('🎯 Using resolved address:', resolvedAddress);
 
+      // Check if organizer exists before fetching events
+      console.log('🔍 Checking if organizer exists...');
+      let organizerExists = false;
+      try {
+        organizerExists = await organizerContract.organizerExists!(resolvedAddress);
+        console.log('📋 Organizer exists:', organizerExists);
+      } catch (existsError: any) {
+        console.warn('⚠️ Failed to check organizer existence:', existsError);
+        // Continue anyway - the function might still work
+      }
+
+      if (!organizerExists) {
+        console.log('⚠️ Organizer does not exist in contract, but continuing...');
+        // Don't set error here - some organizers might not be registered yet
+      }
+
       // Get organizer event indices with resolved address
-      const eventIndices = await organizerContract.getEventsByOrganizer!(resolvedAddress) as bigint[];
-      console.log('📊 Event indices found:', eventIndices.length, eventIndices);
+      console.log('📊 Fetching event indices for organizer...');
+      let eventIndices: bigint[] = [];
+      try {
+        eventIndices = await organizerContract.getEventsByOrganizer!(resolvedAddress) as bigint[];
+        console.log('📊 Event indices found:', eventIndices.length, eventIndices);
+      } catch (eventError: any) {
+        console.error('❌ Failed to get events by organizer:', eventError);
+
+        // Provide specific error messages based on the error type
+        if (eventError.code === 'CALL_EXCEPTION') {
+          if (eventError.reason) {
+            setError(`Contract reverted: ${eventError.reason}`);
+          } else {
+            setError('Failed to fetch events from blockchain. The organizer may not have any events or the contract call failed.');
+          }
+        } else if (eventError.code === 'NETWORK_ERROR') {
+          setError('Network error. Please check your connection and try again.');
+        } else if (eventError.code === 'TIMEOUT') {
+          setError('Request timed out. Please try again.');
+        } else {
+          setError(`Failed to fetch events: ${eventError.message || 'Unknown error'}`);
+        }
+
+        // Set empty data and return
+        setEventPerformance([]);
+        setEOStats({
+          totalRevenue: 0,
+          revenueChange: 0,
+          totalEvents: 0,
+          activeEvents: 0,
+          totalTicketsSold: 0,
+          ticketsChange: 0,
+          avgTicketPrice: 0,
+          totalAttendees: 0,
+        });
+        setRecentTransactions([]);
+        setRevenueData([]);
+        return;
+      }
       
       // Fetch all event details
       const eventsPromises = eventIndices.map((idx: bigint) => 
@@ -725,7 +797,21 @@ export function useEOPortfolioData() {
 
     } catch (err: any) {
       console.error('Error fetching portfolio data:', err);
-      setError(err.message || 'Failed to fetch portfolio data');
+      
+      // Provide user-friendly error messages
+      let errorMessage = 'Failed to load portfolio data';
+      
+      if (err.code === 'CALL_EXCEPTION') {
+        errorMessage = 'Failed to connect to the blockchain. Please check your wallet connection and try again.';
+      } else if (err.code === 'NETWORK_ERROR') {
+        errorMessage = 'Network connection error. Please check your internet connection.';
+      } else if (err.code === 'TIMEOUT') {
+        errorMessage = 'Request timed out. Please try again.';
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

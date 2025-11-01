@@ -8,7 +8,7 @@ import { ethers } from 'ethers';
 import { useWallet } from '@/hooks/usePushChainWallet';
 import EventOrganizerABI from '@/contracts/EventOrganizer.json';
 import EventTicketABI from '@/contracts/EventTicket.json';
-import { getContracts } from '@/config/contracts';
+import { getContracts, getNetworkConfig } from '@/config/contracts';
 
 // Types
 export interface DeployedContract {
@@ -345,7 +345,8 @@ export const useEOContracts = () => {
 
     try {
       // Get provider and contract addresses
-      const provider = new ethers.BrowserProvider((window as any).ethereum);
+      const networkConfig = getNetworkConfig();
+      const provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl);
       const { EventOrganizer } = getContracts();
 
       // Get EventOrganizer contract
@@ -667,7 +668,23 @@ export const useEOContracts = () => {
       });
     } catch (err) {
       console.error('❌ Error fetching EO contracts:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch contracts');
+      
+      // Provide user-friendly error messages
+      let errorMessage = 'Failed to load contracts';
+      
+      if (err instanceof Error) {
+        if (err.message.includes('CALL_EXCEPTION')) {
+          errorMessage = 'Failed to connect to the blockchain. Please check your wallet connection and try again.';
+        } else if (err.message.includes('NETWORK_ERROR')) {
+          errorMessage = 'Network connection error. Please check your internet connection.';
+        } else if (err.message.includes('TIMEOUT')) {
+          errorMessage = 'Request timed out. Please try again.';
+        } else {
+          errorMessage = err.message;
+        }
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
